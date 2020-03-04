@@ -1,6 +1,19 @@
-const findATMs = () => {
+const chooseBank = (chosenBank) => {
+  const url = `https://raw.githubusercontent.com/OpenBankingUK/opendata-api-spec-compiled/master/participant_store.json`;
+  fetch(url)
+  .then(response => response.json())
+  .then((data) => {
+      data.data.forEach((bank) => {
+        if (bank.name.toLowerCase().includes(chosenBank.toLowerCase())) {
+          findATMs(`${bank.baseUrl}/${bank.supportedAPIs.atms}/atms`);
+        }
+      });
+  });
+}
+
+const findATMs = (url) => {
   // Translate the address into coordinates
-  const url = `https://api.hsbc.com/open-banking/v2.2/atms`;
+  console.log(url);
   fetch(url)
   .then(response => response.json())
   .then((data) => {
@@ -9,17 +22,21 @@ const findATMs = () => {
 
     atms.forEach((atm) => {
       const coordinates = atm.Location.PostalAddress.GeoLocation.GeographicCoordinates;
-      console.log(coordinates);
+      // console.log(coordinates);
       // Move the map to the new coordinate point
-      var marker = new mapboxgl.Marker()
+      markerArray.push(
+        new mapboxgl.Marker()
         .setLngLat([coordinates.Longitude, coordinates.Latitude])
-        .addTo(map);
+        .addTo(map)
+      );
     })
   });
 };
 
 
 // ///////////////// Execute the code /////////////////
+
+const markerArray = [];
 
 // Initialise the Map, already an API call to Mapbox!
 mapboxgl.accessToken = 'pk.eyJ1IjoieWFubmx1Y2tsZWluIiwiYSI6ImNqcnZmeHQwaDAxb2o0NGx2bG1tOWgwNGIifQ.q4zhKOCoH7nDIJNm88leXg';
@@ -34,7 +51,15 @@ const map = new mapboxgl.Map({
 const input = document.querySelector("input");
 const button = document.querySelector("button");
 button.addEventListener("click", (event) => {
-  // Relocate our map to the new address
-  findATMs();
+
+  // Remove the previous markers
+  markerArray.forEach((marker) => marker.remove());
+
+  // Find the Lloyds ATMS
+  // const url = `https://api.lloydsbank.com/open-banking/v2.2/atms`;
+  // findATMs();
+
+  // Find the ATMs of the designated bank
+  chooseBank(input.value);
 });
 
