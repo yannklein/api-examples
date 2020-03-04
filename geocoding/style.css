@@ -8,7 +8,7 @@ body {
   height: 100vh;
 }
 
-.search-bar input, .search-bar button {
+.input, .button {
   font-size: 24px;
   padding: 8px;
 }

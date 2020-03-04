@@ -5,19 +5,20 @@ const chooseBank = (chosenBank) => {
   .then((data) => {
       data.data.forEach((bank) => {
         if (bank.name.toLowerCase().includes(chosenBank.toLowerCase())) {
-          findATMs(`${bank.baseUrl}/${bank.supportedAPIs.atms}/atms`);
+          findATMs(bank.name, `${bank.baseUrl}/${bank.supportedAPIs.atms}/atms`);
         }
       });
   });
 }
 
-const findATMs = (url) => {
+const findATMs = (bankName, url) => {
   // Translate the address into coordinates
   console.log(url);
-  fetch(url)
+  fetch(url, {headers: {'Accept': 'application/prs.openbanking.opendata.v2.2+json'}})
   .then(response => response.json())
   .then((data) => {
 
+    errorMessage.insertAdjacentHTML("beforeend", `<p>We found some ATMs for ${bankName}!</p>`);
     const atms = data.data[0].Brand[0].ATM // this are the new coordinates (e.g.[139.839478, 35.652832])
 
     atms.forEach((atm) => {
@@ -30,6 +31,9 @@ const findATMs = (url) => {
         .addTo(map)
       );
     })
+  })
+  .catch((error) => {
+    errorMessage.insertAdjacentHTML("beforeend", `<p>No luck for ${bankName}! You'll need to signup to use the API...</p>`);
   });
 };
 
@@ -48,12 +52,14 @@ const map = new mapboxgl.Map({
 });
 
 // Listen to a new address
-const input = document.querySelector("input");
-const button = document.querySelector("button");
+const input = document.querySelector(".input");
+const button = document.querySelector(".button");
+const errorMessage = document.querySelector(".error-message");
 button.addEventListener("click", (event) => {
 
   // Remove the previous markers
   markerArray.forEach((marker) => marker.remove());
+  errorMessage.innerText = "";
 
   // Find the Lloyds ATMS
   // const url = `https://api.lloydsbank.com/open-banking/v2.2/atms`;
